@@ -1,24 +1,54 @@
 import socket
-from test.test_wsgiref import hello_app
+import RPi.GPIO as GPIO
+import time
 
-#연결할 Host, Port 정보
-HOST = '192.168.0.76'  
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(23, GPIO.OUT)
+
+HOST = "192.168.0.76"
 PORT = 3889
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+print ('Socket created')
+s.bind((HOST, PORT))
+print ('Socket bind complete')
+s.listen(1)
+print ('Socket now listening')
 
-#소켓 생성
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#파이 컨트롤 함수
+def do_some_stuffs_with_input(input_string):
+   #라즈베리파이를 컨트롤할 명령어 설정
+   if input_string == "led":
+      input_string = "led를 점등합니다."
+      GPIO.output(23, True)
+      time.sleep(1)
+      GPIO.output(23, False)
+      time.sleep(1)
+      #파이 동작 명령 추가할것
+   elif input_string == "pump":
+      input_string = "펌프를 작동 시킵니다."
+   elif input_string == "single":
+      input_string = "사진을 찍습니다."
+   else :
+      input_string = input_string + " 없는 명령어 입니다."
+   return input_string
 
-#서버에 접속
-client_socket.connect((HOST, PORT))
+while True:
+   #접속 승인
+   conn, addr = s.accept()
+   print("Connected by ", addr)
 
-#서버에 "Hello world"메세지 전송
-while True : 
-    text1 = str(input("보낼 메시지 : "))
-    client_socket.sendall(text1.encode()); 
+   #데이터 수신
+   data = conn.recv(1024)
+   data = data.decode("utf8").strip()
+   if not data: break
+   print("Received: " + data)
 
-    #서버에게서 메시지를 수신(에코)
-    data = client_socket.recv(1024)
-    print('Received', repr(data.decode()))
+   #수신한 데이터로 파이를 컨트롤 
+   res = do_some_stuffs_with_input(data)
+   print("파이 동작 :" + res)
 
-#클라이언트 소켓을 닫는다.
-client_socket.close()
+   #클라이언트에게 답을 보냄
+   conn.sendall(res.encode("utf-8"))
+   #연결 닫기
+   conn.close()
+s.close()
