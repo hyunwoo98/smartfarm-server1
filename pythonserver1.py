@@ -23,11 +23,10 @@ def do_some_stuffs_with_input(input_string):
       time.sleep(1)
       GPIO.output(23, False)
       time.sleep(1)
-      #파이 동작 명령 추가할것
    elif input_string == "pump":
-      input_string = "펌프를 작동 시킵니다."
-   elif input_string == "single":
-      input_string = "사진을 찍습니다."
+      input_string = "펌프를 작동시킵니다."
+   elif input_string == "fan":
+      input_string = "팬을 작동시킵니다."
    else :
       input_string = input_string + " 없는 명령어 입니다."
    return input_string
